@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>AI Radio (local)</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <header class="header">
+        <div class="brand">
+          <h1>AI Radio</h1>
+          <p class="muted">Generate short tracks with AI music</p>
+        </div>
+        <div class="pill" id="healthPill">Checking…</div>
+      </header>
+
+      <main class="main">
+        <section class="card">
+          <h2>New track / station</h2>
+          <div class="grid">
+            <div class="stack">
+              <label>
+                <span>Genre / station prompt</span>
+                <textarea
+                  id="prompt"
+                  rows="4"
+                  placeholder="Example: Carnatic classical, veena + violin + mridangam, raga Kalyani vibe, alapana + kriti feel, live concert ambience"
+                ></textarea>
+              </label>
+              <label>
+                <span>Tags (recommended, comma-separated)</span>
+                <textarea
+                  id="tags"
+                  rows="2"
+                  placeholder="carnatic,classical,veena,violin,mridangam,ghatam,raga,alapana,kriti,concert"
+                ></textarea>
+              </label>
+              <label>
+                <span>Lyrics (optional)</span>
+                <textarea
+                  id="lyrics"
+                  rows="3"
+                  placeholder="Leave empty for instrumental, or paste structured lyrics with [Verse]/[Chorus]…"
+                ></textarea>
+              </label>
+
+              <details class="advanced">
+                <summary>Advanced (provider tuning)</summary>
+                <div class="advancedGroup" id="aceControls">
+                  <div class="advancedGroupTitle">ACE-Step</div>
+                  <div class="advancedGrid">
+                    <label>
+                      <span>Steps</span>
+                      <input id="steps" type="number" min="1" max="200" step="1" value="8" />
+                    </label>
+                    <label>
+                      <span>Guidance scale</span>
+                      <input id="guidanceScale" type="number" min="1" max="30" step="0.1" value="7" />
+                    </label>
+                    <label>
+                      <span>Shift</span>
+                      <input id="shift" type="number" min="1" max="5" step="0.1" value="1" />
+                    </label>
+                    <label>
+                      <span>Infer method</span>
+                      <select id="inferMethod">
+                        <option value="ode">ODE</option>
+                        <option value="sde">SDE</option>
+                      </select>
+                    </label>
+                  </div>
+                </div>
+
+                <div class="advancedGroup" id="heartControls">
+                  <div class="advancedGroupTitle">HeartMuLa</div>
+                  <div class="advancedGrid">
+                    <label>
+                      <span>Temperature</span>
+                      <input id="temperature" type="number" min="0.1" max="2" step="0.1" value="1" />
+                    </label>
+                    <label>
+                      <span>Top-k</span>
+                      <input id="topk" type="number" min="1" max="500" step="1" value="50" />
+                    </label>
+                    <label>
+                      <span>CFG scale</span>
+                      <input id="cfgScale" type="number" min="1" max="10" step="0.1" value="1.5" />
+                    </label>
+                  </div>
+                </div>
+              </details>
+            </div>
+            <div class="stack">
+              <label>
+                <span>Provider</span>
+                <select id="provider">
+                  <option value="acestep">ACE-Step (local)</option>
+                  <option value="elevenlabs">ElevenLabs (API)</option>
+                  <option value="heartmula">HeartMuLa (local)</option>
+                </select>
+              </label>
+              <p id="providerHint" class="muted tiny"></p>
+              <label>
+                <span>Length (seconds)</span>
+                <input id="lengthSec" type="number" min="5" max="180" value="30" />
+              </label>
+              <label>
+                <span>Station name (optional)</span>
+                <input id="stationName" type="text" maxlength="120" placeholder="Example: Carnatic Flow FM" />
+              </label>
+              <label>
+                <span>Station variations</span>
+                <input id="variationCount" type="number" min="2" max="12" value="4" />
+              </label>
+              <label class="check">
+                <input id="instrumental" type="checkbox" />
+                <span>Instrumental only</span>
+              </label>
+            </div>
+          </div>
+          <div class="actions">
+            <button id="generateBtn">Generate Track</button>
+            <button id="generateStationBtn" type="button">Generate Station Set</button>
+            <button class="secondary" id="useExampleBtn" type="button">Use Carnatic example</button>
+          </div>
+          <div class="status" id="status"></div>
+        </section>
+
+        <section class="card nowPlaying">
+          <h2>Now playing</h2>
+          <div class="now">
+            <div class="cover" aria-hidden="true"></div>
+            <div class="playerWrap">
+              <audio id="player" controls preload="none"></audio>
+              <div class="row">
+                <a id="downloadLink" class="link" href="#" download hidden>Download current track</a>
+                <button id="nextBtn" class="secondary" type="button" disabled>Play next in list</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="card tracksCard">
+          <div class="cardHeader">
+            <h2>Generated tracks</h2>
+            <button id="clearBtn" class="secondary" type="button">Clear</button>
+          </div>
+          <div id="tracks" class="tracks"></div>
+        </section>
+      </main>
+    </div>
+
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>

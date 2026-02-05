@@ -1,0 +1,11 @@
+.DS_Store
+node_modules
+dist
+.env
+generated
+vendor/heartlib
+vendor/acestep
+.venv
+.venv*/
+*.log
+*.pid
