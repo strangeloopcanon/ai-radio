@@ -3,78 +3,162 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>AI Radio (local)</title>
+    <title>AI Radio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
-    <div class="container">
-      <header class="header">
-        <div class="brand">
-          <h1>AI Radio</h1>
-          <p class="muted">Generate short tracks with AI music</p>
+    <div class="noise" aria-hidden="true"></div>
+
+    <div class="layout">
+      <header class="topbar">
+        <div class="topbar-left">
+          <div class="logo">
+            <div class="logo-dial" aria-hidden="true">
+              <div class="dial-tick"></div>
+            </div>
+            <span class="logo-text">AI Radio</span>
+          </div>
+          <span class="tagline">Generative music station</span>
         </div>
-        <div class="pill" id="healthPill">Checking…</div>
+        <div class="topbar-right">
+          <div class="status-beacon" id="healthBeacon"></div>
+          <span class="status-label" id="healthPill">Checking…</span>
+        </div>
       </header>
 
       <main class="main">
-        <section class="card">
-          <h2>New station mix</h2>
-          <div class="grid">
-            <div class="stack">
-              <label>
-                <span>Station name</span>
-                <input id="stationName" type="text" maxlength="120" placeholder="Example: Carnatic Flow FM" />
-              </label>
-              <label>
-                <span>Station vibe / prompt</span>
-                <textarea
-                  id="prompt"
-                  rows="5"
-                  placeholder="Example: Carnatic classical mix. Veena and violin lead with mridangam and ghatam percussion. Bright raga color, concert ambience, devotional but energetic."
-                ></textarea>
-              </label>
-            </div>
-            <div class="stack">
-              <label>
-                <span>Track length (seconds)</span>
-                <input id="lengthSec" type="number" min="5" max="180" value="30" />
-              </label>
-              <label>
-                <span>How many tracks</span>
-                <input id="variationCount" type="number" min="2" max="12" value="4" />
-              </label>
-              <p id="providerHint" class="muted tiny"></p>
-            </div>
+        <!-- LEFT: Station Creator -->
+        <section class="panel creator-panel">
+          <div class="panel-header">
+            <span class="panel-number">01</span>
+            <h2 class="panel-title">Create Station</h2>
           </div>
-          <div class="actions">
-            <button id="generateMixBtn" type="button">Generate Mix</button>
-            <button class="secondary" id="useExampleBtn" type="button">Use Carnatic example</button>
-          </div>
-          <div class="status" id="status"></div>
-        </section>
 
-        <section class="card nowPlaying">
-          <h2>Now playing</h2>
-          <div class="now">
-            <div class="cover" aria-hidden="true"></div>
-            <div class="playerWrap">
-              <audio id="player" controls preload="none"></audio>
-              <div class="row">
-                <a id="downloadLink" class="link" href="#" download hidden>Download current track</a>
-                <button id="nextBtn" class="secondary" type="button" disabled>Play next in list</button>
+          <div class="form-stack">
+            <div class="field">
+              <label for="stationName" class="field-label">Station Name</label>
+              <input id="stationName" type="text" maxlength="120" placeholder="e.g. Midnight Jazz FM" class="input" />
+            </div>
+
+            <div class="field">
+              <label for="prompt" class="field-label">Vibe / Prompt</label>
+              <textarea
+                id="prompt"
+                rows="4"
+                class="input"
+                placeholder="e.g. Smooth jazz with upright bass, brushed drums, and muted trumpet. Late-night club atmosphere, warm and intimate."
+              ></textarea>
+            </div>
+
+            <div class="field-row">
+              <div class="field">
+                <label for="lengthSec" class="field-label">Duration (sec)</label>
+                <input id="lengthSec" type="number" min="5" max="180" value="30" class="input input-compact" />
+              </div>
+              <div class="field">
+                <label for="variationCount" class="field-label">Tracks</label>
+                <input id="variationCount" type="number" min="2" max="12" value="4" class="input input-compact" />
               </div>
             </div>
+
+            <p id="providerHint" class="hint"></p>
           </div>
+
+          <div class="creator-actions">
+            <button id="generateMixBtn" type="button" class="btn btn-primary">
+              <span class="btn-icon" aria-hidden="true">&#9654;</span>
+              <span class="btn-label">Generate Mix</span>
+            </button>
+            <button id="useExampleBtn" type="button" class="btn btn-ghost">Use example</button>
+          </div>
+
+          <div class="status-bar" id="status"></div>
         </section>
 
-        <section class="card tracksCard">
-          <div class="cardHeader">
-            <h2>Generated tracks</h2>
-            <button id="clearBtn" class="secondary" type="button">Clear</button>
+        <!-- RIGHT: Player -->
+        <section class="panel player-panel">
+          <div class="panel-header">
+            <span class="panel-number">02</span>
+            <h2 class="panel-title">Now Playing</h2>
           </div>
-          <div id="tracks" class="tracks"></div>
+
+          <div class="player-display">
+            <div class="vinyl-container" id="vinylContainer">
+              <div class="vinyl" id="vinyl">
+                <div class="vinyl-label">
+                  <div class="vinyl-label-inner">
+                    <div class="vinyl-dot"></div>
+                  </div>
+                </div>
+                <div class="vinyl-groove v1"></div>
+                <div class="vinyl-groove v2"></div>
+                <div class="vinyl-groove v3"></div>
+              </div>
+            </div>
+
+            <div class="player-info">
+              <div class="now-playing-label">ON AIR</div>
+              <div class="now-playing-title" id="nowPlayingTitle">No track loaded</div>
+            </div>
+          </div>
+
+          <div class="player-controls">
+            <audio id="player" preload="none"></audio>
+            <div class="transport">
+              <button id="prevBtn" class="btn btn-transport" type="button" disabled title="Previous track">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3 2h2v12H3V2zm10 0L6 8l7 6V2z"/></svg>
+              </button>
+              <button id="playPauseBtn" class="btn btn-play" type="button" disabled title="Play / Pause">
+                <svg id="playIcon" width="22" height="22" viewBox="0 0 22 22" fill="currentColor"><path d="M6 3l14 8-14 8V3z"/></svg>
+                <svg id="pauseIcon" width="22" height="22" viewBox="0 0 22 22" fill="currentColor" style="display:none"><path d="M5 3h4v16H5V3zm8 0h4v16h-4V3z"/></svg>
+              </button>
+              <button id="nextBtn" class="btn btn-transport" type="button" disabled title="Next track">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M11 2h2v12h-2V2zM3 2l7 6-7 6V2z"/></svg>
+              </button>
+            </div>
+
+            <div class="scrubber-row">
+              <span class="time" id="currentTime">0:00</span>
+              <div class="scrubber" id="scrubber">
+                <div class="scrubber-fill" id="scrubberFill"></div>
+                <div class="scrubber-thumb" id="scrubberThumb"></div>
+              </div>
+              <span class="time" id="durationTime">0:00</span>
+            </div>
+
+            <div class="volume-row">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" class="vol-icon"><path d="M2 5.5v5h3l4 4V1.5l-4 4H2zm10.5.17v4.66A3.5 3.5 0 0 0 14 8a3.5 3.5 0 0 0-1.5-2.33z"/></svg>
+              <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="0.8" class="volume-slider" />
+            </div>
+          </div>
+
+          <div class="player-actions">
+            <a id="downloadLink" class="btn btn-ghost btn-sm" download hidden aria-disabled="true" tabindex="-1">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2a8 8 0 1 0 0 16 8 8 0 0 0 0-16Zm0 3a5 5 0 1 1 0 10 5 5 0 0 1 0-10Zm0 4.25a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5Z"/>
+                <path d="M11 15v6h2v-6h3l-4-4-4 4h3z"/>
+              </svg>
+              Download
+            </a>
+          </div>
         </section>
       </main>
+
+      <!-- Track Library -->
+      <section class="panel library-panel">
+        <div class="panel-header">
+          <div class="panel-header-left">
+            <span class="panel-number">03</span>
+            <h2 class="panel-title">Track Library</h2>
+            <span class="track-count" id="trackCount"></span>
+          </div>
+          <button id="clearBtn" class="btn btn-ghost btn-sm" type="button">Clear all</button>
+        </div>
+        <div id="tracks" class="tracks-grid"></div>
+      </section>
     </div>
 
     <script src="/app.js" type="module"></script>
