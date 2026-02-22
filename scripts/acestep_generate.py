@@ -36,6 +36,14 @@ def main():
     from acestep.handler import AceStepHandler
     from acestep.llm_inference import LLMHandler
     from acestep.inference import GenerationParams, GenerationConfig, generate_music
+    from acestep import model_downloader
+
+    # This runner always uses thinking=False, so the 5Hz LM checkpoint is not needed.
+    # Keep ACE-Step's "main model components" check aligned with that to avoid
+    # re-downloading acestep-5Hz-lm-1.7B after local cleanup.
+    model_downloader.MAIN_MODEL_COMPONENTS = [
+        component for component in model_downloader.MAIN_MODEL_COMPONENTS if not component.startswith("acestep-5Hz-lm-")
+    ]
 
     dit_handler = AceStepHandler()
     llm_handler = LLMHandler()  # we won't initialize it (keeps RAM down)
@@ -118,4 +126,3 @@ def main():
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

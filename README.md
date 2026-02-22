@@ -1,83 +1,40 @@
 # AI Radio (local)
 
-Generate short tracks with AI music and create a station mix from one prompt.
-
-## Frontend
+AI Radio helps you make a short station mix from one prompt.
 
 ![AI Radio frontend](docs/frontend.png)
 
-## What this app does
-
-- Clean station-first UI: station name, station vibe prompt, track length, track count.
-- Generates a multi-track mix (`2-12` variations) from one station prompt.
-- Builds prompt variations automatically so each track is different.
-- Local playback queue with per-track download links.
-
-## Quick start
-
-1. Install dependencies
+## 1) Start it (2 minutes)
 
 ```bash
 npm install
-```
-
-2. Create local env file
-
-```bash
 cp .env.example .env
-```
-
-3. Set your default backend in `.env` (recommended: `MUSIC_PROVIDER=acestep`)
-
-4. Start dev server
-
-```bash
 npm run dev
 ```
 
-5. Open [http://localhost:3000](http://localhost:3000)
+Open the URL shown in the terminal (usually `http://localhost:3001`).
 
-## Provider setup
+## 2) Make your first mix
 
-### ACE-Step (preferred local backend)
+1. Enter a station name.
+2. Enter your vibe prompt.
+3. Choose:
+   - track length
+   - number of tracks
+4. Pick a model:
+   - ACE-Step (local)
+   - ElevenLabs
+5. Click **Generate Mix**.
+6. Play tracks in the queue and download what you like.
 
-- Clone ACE-Step into `vendor/acestep`.
-- On first generation, model assets are downloaded/cached by ACE-Step.
-- On Apple Silicon, use `ACESTEP_DEVICE=mps` in `.env`.
-- Used via `scripts/acestep_generate.py`.
+## 3) ElevenLabs key (if you use ElevenLabs)
 
-### ElevenLabs (optional API fallback)
+Paste your ElevenLabs API key in the input and click **Save for session**.
 
-- Set `ELEVENLABS_API_KEY` in `.env`.
-- Set `MUSIC_PROVIDER=elevenlabs` when you want to use it.
+## 4) Quick problems, quick fixes
 
-### HeartMuLa (optional local fallback)
+- Port issue? Change `PORT` in `.env` and restart.
+- ACE-Step has a dependency issue? Switch to ElevenLabs and continue.
+- Too many tracks too soon? Try fewer tracks or a shorter length.
 
-- Supported by backend only; not the preferred path.
-- Requires `vendor/heartlib` + checkpoints and `MUSIC_PROVIDER=heartmula`.
-
-## Station flow
-
-1. Enter a station name and station vibe prompt.
-2. Choose track length (seconds) and number of tracks.
-3. Click `Generate Mix`.
-4. The backend generates multiple prompt variations and composes one track per variation.
-
-## API endpoints
-
-- `GET /api/health` returns active provider + readiness.
-- `POST /api/station/generate` generates a full station mix.
-- `POST /api/music/compose` generates one track (API supported, not exposed in current UI).
-- `GET /api/tracks` lists saved tracks.
-- `POST /api/tracks/clear` clears generated files/metadata.
-- `GET /api/tracks/:id/download` downloads one generated track.
-
-## Storage
-
-- Generated audio and metadata are written to `generated/`.
-- `generated/` is gitignored.
-
-## Notes
-
-- This project is local-first for experimentation.
-- Downloaded tracks can be shared from the UI.
+That’s it. No deep setup required to start using it.

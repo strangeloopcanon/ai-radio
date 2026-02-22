@@ -1,7 +1,10 @@
 const healthPill = document.getElementById("healthPill");
 const providerHintEl = document.getElementById("providerHint");
+const providerSelectEl = document.getElementById("providerSelect");
 const promptEl = document.getElementById("prompt");
 const stationNameEl = document.getElementById("stationName");
+const elevenLabsApiKeyEl = document.getElementById("elevenlabsApiKey");
+const saveElevenlabsKeyBtn = document.getElementById("saveElevenlabsKeyBtn");
 const variationCountEl = document.getElementById("variationCount");
 const lengthEl = document.getElementById("lengthSec");
 
@@ -16,16 +19,96 @@ const clearBtn = document.getElementById("clearBtn");
 
 let tracks = [];
 let currentIndex = -1;
+const ELEVENLABS_KEY_STORAGE_KEY = "ai_radio.elevenlabs.apiKey";
 let lastHealth = {
   ok: false,
   musicProvider: "unknown",
   providerReady: false,
-  providerReason: ""
+  providerReason: "",
+  hasElevenLabsKey: false,
+  providers: {}
 };
+
+const TOGGLE_PROVIDERS = ["acestep", "elevenlabs"];
 
 function setStatus(message, kind = "info") {
   statusEl.textContent = message ?? "";
   statusEl.classList.toggle("error", kind === "error");
+}
+
+function getElevenLabsApiKeyFromInput() {
+  if (!elevenLabsApiKeyEl) return "";
+  return String(elevenLabsApiKeyEl.value || "").trim();
+}
+
+async function saveElevenLabsKey({ silent = false } = {}) {
+  const apiKey = getElevenLabsApiKeyFromInput();
+  if (apiKey) {
+    localStorage.setItem(ELEVENLABS_KEY_STORAGE_KEY, apiKey);
+  } else {
+    localStorage.removeItem(ELEVENLABS_KEY_STORAGE_KEY);
+  }
+
+  try {
+    const res = await fetch("/api/elevenlabs/key", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ apiKey })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const message = data?.message || "Unable to save ElevenLabs key.";
+      return { ok: false, message };
+    }
+
+    await checkHealth();
+    if (!silent) {
+      setStatus(data?.hasKey ? "ElevenLabs key saved for this session." : "ElevenLabs key removed for this session.");
+    }
+    return { ok: true, hasKey: Boolean(data?.hasKey) };
+  } catch {
+    return { ok: false, message: "Could not save ElevenLabs key. Is the server running?" };
+  }
+}
+
+function resolveProviderFromHealth() {
+  const toggleProvider = providerSelectEl?.value;
+  const providers = lastHealth.providers || {};
+  const hasInputKey = Boolean(getElevenLabsApiKeyFromInput());
+  if (toggleProvider === "elevenlabs" && (lastHealth.hasElevenLabsKey || hasInputKey)) {
+    return toggleProvider;
+  }
+  if (typeof toggleProvider === "string" && providers[toggleProvider]?.ready) {
+    return toggleProvider;
+  }
+
+  const fallbackFromBackend = lastHealth.musicProvider;
+  if (typeof fallbackFromBackend === "string" && providers[fallbackFromBackend]?.ready) {
+    if (providerSelectEl) providerSelectEl.value = fallbackFromBackend;
+    return fallbackFromBackend;
+  }
+
+  for (const candidate of TOGGLE_PROVIDERS) {
+    if (providers[candidate]?.ready) {
+      if (providerSelectEl) providerSelectEl.value = candidate;
+      return candidate;
+    }
+  }
+
+  return TOGGLE_PROVIDERS[0];
+}
+
+function updateProviderOptions() {
+  if (!providerSelectEl) return;
+
+  const providers = lastHealth.providers || {};
+  for (const option of providerSelectEl.options) {
+    const status = providers[option.value];
+    const hasInputKey = option.value === "elevenlabs" && Boolean(getElevenLabsApiKeyFromInput());
+    const isReady = Boolean(status?.ready || (option.value === "elevenlabs" && (lastHealth.hasElevenLabsKey || hasInputKey)));
+    option.disabled = !isReady;
+    option.title = isReady ? "" : status?.reason || "Provider not ready";
+  }
 }
 
 function setWorking(isWorking) {
@@ -47,17 +130,29 @@ function updateHealthUI() {
   if (!lastHealth.ok) {
     setHealth(false, "Server not ready");
     providerHintEl.textContent = "Run `npm run dev`, then refresh.";
+    if (providerSelectEl) providerSelectEl.disabled = true;
     return;
   }
+  updateProviderOptions();
 
-  const provider = String(lastHealth.musicProvider || "unknown");
-  if (lastHealth.providerReady) {
+  const provider = resolveProviderFromHealth();
+  if (providerSelectEl) providerSelectEl.disabled = false;
+  const selectedStatus = lastHealth.providers?.[provider];
+  const selectedReady =
+    provider === "elevenlabs"
+      ? (selectedStatus?.ready || Boolean(lastHealth.hasElevenLabsKey) || Boolean(getElevenLabsApiKeyFromInput()))
+      : selectedStatus?.ready;
+  if (selectedReady) {
     setHealth(true, `Ready: ${provider}`);
-    providerHintEl.textContent = `Using backend: ${provider}`;
+    providerHintEl.textContent = `Using provider: ${provider}`;
     return;
   }
 
-  const reason = String(lastHealth.providerReason || `Not ready: ${provider}`);
+  const reason = String(
+    selectedStatus?.reason ||
+      lastHealth.providerReason ||
+      `Not ready: ${provider}`
+  );
   setHealth(false, reason);
   providerHintEl.textContent = reason;
 }
@@ -72,14 +167,18 @@ async function checkHealth() {
       ok: true,
       musicProvider: String(data?.musicProvider || "unknown"),
       providerReady: Boolean(data?.providerReady),
-      providerReason: String(data?.providerReason || "")
+      providerReason: String(data?.providerReason || ""),
+      hasElevenLabsKey: Boolean(data?.hasElevenLabsKey),
+      providers: data?.providers || {}
     };
   } catch {
     lastHealth = {
       ok: false,
       musicProvider: "unknown",
       providerReady: false,
-      providerReason: ""
+      providerReason: "",
+      hasElevenLabsKey: false,
+      providers: {}
     };
   }
 
@@ -164,8 +263,18 @@ async function generateMix() {
   if (!health.ok) {
     return setStatus("Can't reach the server. Run `npm run dev` in the project folder, then refresh.", "error");
   }
-  if (!health.providerReady) {
-    return setStatus(health.providerReason || `Provider not ready: ${health.musicProvider}`, "error");
+
+  const selectedProvider = resolveProviderFromHealth();
+  const selectedStatus = health.providers?.[selectedProvider];
+  const selectedReady =
+    selectedProvider === "elevenlabs"
+      ? (selectedStatus?.ready || Boolean(health.hasElevenLabsKey) || Boolean(getElevenLabsApiKeyFromInput()))
+      : selectedStatus?.ready;
+  if (!selectedReady) {
+    return setStatus(
+      selectedStatus?.reason || health.providerReason || `Provider not ready: ${selectedProvider}`,
+      "error"
+    );
   }
 
   const stationName = String(stationNameEl.value || "").trim();
@@ -190,9 +299,10 @@ async function generateMix() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        provider: health.musicProvider,
+        provider: selectedProvider,
         stationName,
         stationPrompt: prompt,
+        ...(getElevenLabsApiKeyFromInput() ? { elevenlabsApiKey: getElevenLabsApiKeyFromInput() } : {}),
         variationCount,
         musicLengthMs: Math.round(lengthSec * 1000),
         forceInstrumental: true,
@@ -281,7 +391,30 @@ useExampleBtn.addEventListener("click", () => {
   lengthEl.value = "30";
 });
 
+saveElevenlabsKeyBtn?.addEventListener("click", () => {
+  setWorking(true);
+  saveElevenLabsKey().finally(() => {
+    setWorking(false);
+  });
+});
+elevenLabsApiKeyEl?.addEventListener("input", () => {
+  updateProviderOptions();
+});
+
 generateMixBtn.addEventListener("click", generateMix);
+providerSelectEl?.addEventListener("change", updateHealthUI);
+
+const cachedKey = (() => {
+  try {
+    return localStorage.getItem(ELEVENLABS_KEY_STORAGE_KEY) || "";
+  } catch {
+    return "";
+  }
+})();
+if (elevenLabsApiKeyEl && cachedKey) {
+  elevenLabsApiKeyEl.value = cachedKey;
+  void saveElevenLabsKey({ silent: true });
+}
 
 await checkHealth();
 await refreshTracks();

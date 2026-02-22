@@ -40,6 +40,20 @@
                 <input id="lengthSec" type="number" min="5" max="180" value="30" />
               </label>
               <label>
+                <span>Model</span>
+                <select id="providerSelect">
+                  <option value="acestep">ACE-Step (local)</option>
+                  <option value="elevenlabs">ElevenLabs</option>
+                </select>
+              </label>
+              <label>
+                <span>ElevenLabs API key</span>
+                <div class="inputWithButton">
+                  <input id="elevenlabsApiKey" type="password" autocomplete="off" placeholder="sk_..." />
+                  <button id="saveElevenlabsKeyBtn" class="secondary tinyButton" type="button">Save for session</button>
+                </div>
+              </label>
+              <label>
                 <span>How many tracks</span>
                 <input id="variationCount" type="number" min="2" max="12" value="4" />
               </label>

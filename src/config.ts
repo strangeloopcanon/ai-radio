@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 const envSchema = z.object({
-  PORT: z.coerce.number().int().positive().default(3000),
+  PORT: z.coerce.number().int().positive().default(3001),
   GENERATED_DIR: z.string().min(1).default("generated"),
 
   // Which backend to use for /api/music/compose
@@ -9,6 +9,10 @@ const envSchema = z.object({
 
   // ElevenLabs (optional)
   ELEVENLABS_API_KEY: z.string().optional().default(""),
+  // Optional LLM for station prompt planning
+  OPENAI_API_KEY: z.string().optional().default(""),
+  OPENAI_API_BASE_URL: z.string().url().optional().default("https://api.openai.com/v1"),
+  OPENAI_CHAT_MODEL: z.string().optional().default("gpt-4o-mini"),
 
   // HeartMuLa / heartlib (local)
   HEARTLIB_DIR: z.string().optional().default("vendor/heartlib"),
