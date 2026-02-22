@@ -5,7 +5,7 @@ const envSchema = z.object({
   GENERATED_DIR: z.string().min(1).default("generated"),
 
   // Which backend to use for /api/music/compose
-  MUSIC_PROVIDER: z.enum(["heartmula", "acestep", "elevenlabs"]).optional().default("acestep"),
+  MUSIC_PROVIDER: z.enum(["heartmula", "acestep", "elevenlabs"]).optional().default("elevenlabs"),
 
   // ElevenLabs (optional)
   ELEVENLABS_API_KEY: z.string().optional().default(""),

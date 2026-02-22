@@ -29,7 +29,7 @@ let lastHealth = {
   providers: {}
 };
 
-const TOGGLE_PROVIDERS = ["acestep", "elevenlabs"];
+const TOGGLE_PROVIDERS = ["elevenlabs", "acestep"];
 
 function setStatus(message, kind = "info") {
   statusEl.textContent = message ?? "";
