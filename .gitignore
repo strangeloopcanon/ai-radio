@@ -9,3 +9,5 @@ vendor/acestep
 .venv*/
 *.log
 *.pid
+.beads/
+.tmp/
