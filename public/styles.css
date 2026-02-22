@@ -150,6 +150,18 @@ select:focus {
   box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
 }
 
+.inputWithButton {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+}
+
+.tinyButton {
+  padding: 10px 12px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
 .actions {
   display: flex;
   flex-wrap: wrap;
