@@ -1,4 +1,4 @@
-# AI Radio (local)
+# AI Radio
 
 AI Radio helps you make a short station mix from one prompt.
 
@@ -22,8 +22,8 @@ Open the URL shown in the terminal (usually `http://localhost:3001`).
    - track length
    - number of tracks
 4. Pick a model:
-   - ACE-Step (local)
-   - ElevenLabs
+   - ElevenLabs (default)
+   - ACE-Step
 5. Click **Generate Mix**.
 6. Play tracks in the queue and download what you like.
 
